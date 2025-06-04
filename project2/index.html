@@ -76,7 +76,15 @@
     text-align: center;
   }
 
-  
+  #result.win {
+    color: var(--color-win);
+  }
+  #result.lose {
+    color: var(--color-lose);
+  }
+  #result.draw {
+    color: var(--color-draw);
+  }
 
   #scoreboard {
     display: flex;
@@ -145,7 +153,81 @@
     </div>
   </div>
 
-  
+  <script>
+    (() => {
+      const choices = ['rock', 'paper', 'scissors'];
+      const choiceButtons = document.querySelectorAll('.choice-btn');
+      const resultEl = document.getElementById('result');
+      const playerScoreEl = document.getElementById('player-score');
+      const computerScoreEl = document.getElementById('computer-score');
+
+      let playerScore = 0;
+      let computerScore = 0;
+
+      function getRandomChoice() {
+        return choices[Math.floor(Math.random() * choices.length)];
+      }
+
+      function determineWinner(player, computer) {
+        if (player === computer) return 'draw';
+        if (
+          (player === 'rock' && computer === 'scissors') ||
+          (player === 'scissors' && computer === 'paper') ||
+          (player === 'paper' && computer === 'rock')
+        ) {
+          return 'win';
+        }
+        return 'lose';
+      }
+
+      function capitalize(word) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+
+      function updateScoreboard() {
+        playerScoreEl.textContent = playerScore;
+        computerScoreEl.textContent = computerScore;
+      }
+
+      function displayResult(player, computer, outcome) {
+        const playerEmoji = {
+          rock: '✊',
+          paper: '✋',
+          scissors: '✌️'
+        };
+
+        const message = `You chose ${capitalize(player)} ${playerEmoji[player]}, Computer chose ${capitalize(computer)} ${playerEmoji[computer]}.`;
+        let resultText = '';
+        switch(outcome) {
+          case 'win':
+            resultText = `🎉 You win!`;
+            resultEl.className = 'win';
+            playerScore++;
+            break;
+          case 'lose':
+            resultText = `😞 You lose!`;
+            resultEl.className = 'lose';
+            computerScore++;
+            break;
+          case 'draw':
+            resultText = `😐 It's a draw!`;
+            resultEl.className = 'draw';
+            break;
+        }
+        updateScoreboard();
+        resultEl.textContent = `${message} ${resultText}`;
+      }
+
+      choiceButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const playerChoice = button.getAttribute('data-choice');
+          const computerChoice = getRandomChoice();
+          const outcome = determineWinner(playerChoice, computerChoice);
+          displayResult(playerChoice, computerChoice, outcome);
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
 
