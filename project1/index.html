@@ -208,7 +208,7 @@
       }
       if(currentInput === '') return;
 
-      // Prevent two operators in a row
+      
       const lastChar = currentInput.charAt(currentInput.length - 1);
       if(isOperator(lastChar)) {
         currentInput = currentInput.slice(0, -1) + op;
