@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Simple Calculator</title>
+<style>
+  :root {
+    --main-bg-color: #282c34;
+    --button-bg-color: #4e5d78;
+    --button-hover-bg: #6c7a9a;
+    --accent-color: #61dafb;
+    --text-color: #ffffff;
+    --display-bg-color: #1c1f26;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--main-bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .calculator {
+    background-color: var(--display-bg-color);
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    width: 320px;
+    padding: 20px;
+  }
+
+  .display {
+    background-color: var(--main-bg-color);
+    color: var(--accent-color);
+    font-size: 2.5rem;
+    text-align: right;
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    min-height: 60px;
+    user-select: none;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+  }
+
+  button {
+    background-color: var(--button-bg-color);
+    border: none;
+    border-radius: 10px;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    padding: 18px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px #2f3b54;
+    user-select: none;
+  }
+
+  button:active {
+    box-shadow: none;
+    transform: translateY(3px);
+  }
+
+  button:hover {
+    background-color: var(--button-hover-bg);
+  }
+
+  button.operator {
+    background-color: #ff8c42;
+    color: #181818;
+    font-weight: bold;
+  }
+
+  button.operator:hover {
+    background-color: #e07b24;
+  }
+
+  button.equal {
+    background: linear-gradient(45deg, #40c9ff, #e81cff);
+    color: white;
+    font-weight: bold;
+    grid-column: span 2;
+  }
+
+  button.equal:hover {
+    filter: brightness(1.1);
+  }
+
+  button.clear {
+    background-color: #ff5959;
+    color: white;
+    font-weight: bold;
+  }
+
+  button.clear:hover {
+    background-color: #e04949;
+  }
+
+ 
+  @media (max-width: 360px) {
+    .calculator {
+      width: 95vw;
+      padding: 15px;
+    }
+
+    .display {
+      font-size: 2rem;
+      padding: 10px 15px;
+      min-height: 50px;
+    }
+
+    button {
+      font-size: 1.2rem;
+      padding: 14px 0;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="calculator" role="application" aria-label="Simple calculator">
+    <div class="display" id="display" aria-live="polite" aria-atomic="true">0</div>
+    <div class="buttons">
+      <button type="button" class="clear" id="clear">C</button>
+      <button type="button" class="operator" data-operator="/">&#247;</button>
+      <button type="button" class="operator" data-operator="*">&times;</button>
+      <button type="button" class="operator" data-operator="-">−</button>
+
+      <button type="button" data-number="7">7</button>
+      <button type="button" data-number="8">8</button>
+      <button type="button" data-number="9">9</button>
+      <button type="button" class="operator" data-operator="+">+</button>
+
+      <button type="button" data-number="4">4</button>
+      <button type="button" data-number="5">5</button>
+      <button type="button" data-number="6">6</button>
+      <button type="button" id="empty" disabled style="visibility:hidden;"></button>
+
+      <button type="button" data-number="1">1</button>
+      <button type="button" data-number="2">2</button>
+      <button type="button" data-number="3">3</button>
+      <button type="button" class="equal" id="equals">=</button>
+
+      <button type="button" data-number="0" style="grid-column: span 2;">0</button>
+      <button type="button" data-number=".">.</button>
+    </div>
+  </div>
+
+<script>
+  (() => {
+    const display = document.getElementById('display');
+    let currentInput = '0';
+    let lastInput = '';
+    let resetNext = false;
+
+    function updateDisplay() {
+      display.textContent = currentInput;
+    }
+
+    function isOperator(char) {
+      return ['+', '-', '*', '/'].includes(char);
+    }
+
+    function appendNumber(num) {
+      if(resetNext) {
+        currentInput = num === '.' ? '0.' : num;
+        resetNext = false;
+      } else {
+        if(currentInput === '0' && num !== '.') {
+          currentInput = num;
+        } else {
+          
+          if(num === '.') {
+            
+            const lastOpPos = Math.max(currentInput.lastIndexOf('+'), currentInput.lastIndexOf('-'), currentInput.lastIndexOf('*'), currentInput.lastIndexOf('/'));
+            const lastNumber = currentInput.substring(lastOpPos + 1);
+            if(lastNumber.includes('.')) return;
+          }
+          currentInput += num;
+        }
+      }
+      updateDisplay();
+    }
+
+    function appendOperator(op) {
+      if(resetNext) {
+        resetNext = false;
+      }
+      if(currentInput === '' && op === '-') {
+        // Allow negative at start
+        currentInput = '-';
+        updateDisplay();
+        return;
+      }
+      if(currentInput === '') return;
+
+      // Prevent two operators in a row
+      const lastChar = currentInput.charAt(currentInput.length - 1);
+      if(isOperator(lastChar)) {
+        currentInput = currentInput.slice(0, -1) + op;
+      } else {
+        currentInput += op;
+      }
+      updateDisplay();
+    }
+
+    function clearAll() {
+      currentInput = '0';
+      resetNext = false;
+      updateDisplay();
+    }
+
+    function calculateResult() {
+      try {
+        let expression = currentInput;
+        // Prevent ending on operator
+        const lastChar = expression.charAt(expression.length - 1);
+        if(isOperator(lastChar)) {
+          expression = expression.slice(0, -1);
+        }
+        if(expression === '') {
+          currentInput = '0';
+          updateDisplay();
+          return;
+        }
+        // Use Function constructor instead of eval for safer expression evaluation
+        const result = Function('"use strict";return (' + expression + ')')();
+        currentInput = String(result);
+        resetNext = true;
+        updateDisplay();
+      } catch (e) {
+        currentInput = 'Error';
+        resetNext = true;
+        updateDisplay();
+      }
+    }
+
+    // Add event listeners to buttons
+    document.querySelectorAll('button[data-number]').forEach(button => {
+      button.addEventListener('click', () => {
+        appendNumber(button.getAttribute('data-number'));
+      });
+    });
+
+    document.querySelectorAll('button.operator').forEach(button => {
+      button.addEventListener('click', () => {
+        appendOperator(button.getAttribute('data-operator'));
+      });
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+      clearAll();
+    });
+
+    document.getElementById('equals').addEventListener('click', () => {
+      calculateResult();
+    });
+
+    // Keypress support for better user experience
+    window.addEventListener('keydown', e => {
+      if(e.key >= '0' && e.key <= '9') {
+        appendNumber(e.key);
+      } else if(e.key === '.') {
+        appendNumber(e.key);
+      } else if(e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        calculateResult();
+      } else if(['+', '-', '*', '/'].includes(e.key)) {
+        appendOperator(e.key);
+      } else if(e.key === 'Backspace') {
+        e.preventDefault();
+        if(resetNext) {
+          clearAll();
+        } else {
+          if(currentInput.length > 1) {
+            currentInput = currentInput.slice(0, -1);
+          } else {
+            currentInput = '0';
+          }
+          updateDisplay();
+        }
+      } else if(e.key.toLowerCase() === 'c') {
+        clearAll();
+      }
+    });
+  })();
+
+</script>
+
+</body>
+</html>
+
